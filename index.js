@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 const commands = require('./commands');
 const geo = require('./geo');
-const auth = require('./auth');
 app.use(express.json({ limit: "50mb" }));
 
 

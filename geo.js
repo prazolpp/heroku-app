@@ -9,7 +9,7 @@ let visitorData = {};
 
 const render = ($city, $lat, $long) => {
   let getList = visitors.reduce((acc, city) => {
-    return `${acc}<a href='/location/city/${city}'> <h2>${city} - ${visitorData[city].count}</h2> </a>`;
+    return `${acc}<a href='/geo/location/city/${city}'> <h2>${city} - ${visitorData[city].count}</h2> </a>`;
   }, "");
 
   return `<h1>You are visiting from <span id="city"></span></h1>
