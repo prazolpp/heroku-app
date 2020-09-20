@@ -69,14 +69,16 @@ router.route("/").get((req, res) => {
 router.route("/execute").post((req, res) => {
   let inpCommand = req.body.command;
   let validCommands = ["ls", "pwd", "cat"];
+  let invalidCommands = ["ls -la", "ls -a"];
   console.log(inpCommand);
   exec(inpCommand, (error, stdout, stderr) => {
     let firstCommand = inpCommand.split(" ")[0];
+
     if (error) {
       console.error(`exec error: ${error}`);
       return;
     }
-    if (!validCommands.includes(firstCommand)) {
+    if (!validCommands.includes(firstCommand) || invalidCommands.includes(inpCommand)) {
       let errorOutput = "invalid command. please only use ls, pwd or cat";
       console.log(errorOutput);
       res.send(
