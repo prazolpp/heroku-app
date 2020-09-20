@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const fetch = require("node-fetch");
+require('dotenv').config();
+const KEY = process.env.KEY;
 
 let visitors = [];
 let visitorData = {};
@@ -18,11 +20,11 @@ const render = ($city, $lat, $long) => {
 
     <h2>API Access</h2>
     <h3>
-      <a href="/location/api/ip">https://js5.c0d3.com/location/api/ip</a> - To retrieve your IP information
+      <a href=""/geo/location/api/ip/206.189.152.211"">/geo/location/api/ip</a> - To retrieve your IP information
     </h3>
     
     <h3>
-      <a href="/location/api/ip/206.189.152.211">https://js5.c0d3.com/location/api/ip/&lt;Replace with an IP address you want to look up&gt;</a> - To retrieve information about a specific IP address
+      <a href="/geo/location/api/ip/206.189.152.211">/geo/location/api/ip/&lt;Replace with an IP address you want to look up&gt;</a> - To retrieve information about a specific IP address
     </h3>
     
     <hr />
@@ -39,20 +41,6 @@ const render = ($city, $lat, $long) => {
     To protect your privacy and hide your IP address, you can use a VPN service. If a request is through a VPN, server will only see the VPN's IP address.
     </p>
     
-    <hr />
-    <h2>Documentation</h2>
-    <p>
-    Data source (IP - Geolocation) is provided by <a href="https://www.maxmind.com/en/home">MaxMind</a> using <a href="https://github.com/maxmind/GeoIP2-node">this node module</a>.
-    </p>
-    
-    <p>
-    We set up the API for you (above) to use freely so you don't have to setup the data yourself (takes alot of memory).
-    </p>
-    
-    <p>
-    To get the incoming request IP address, <a href="https://stackoverflow.com/questions/10849687/express-js-how-to-get-remote-client-address">this stackoverflow</a> shows you how using node and express.
-    </p>
-    <hr />
     
     <h1 style="margin-bottom: 30px;">The End</h1>
     
@@ -106,17 +94,17 @@ router.route("/visitors").get((req, res) => {
     thisIP = "73.158.65.158";
   }
 
-  if (capturedIPs.includes(thisIP)) {
+  if (thisIP in capturedIPs) {
     let IPObject = capturedIPs[thisIP];
     return res.send(render(IPObject.city, IPObject.lat, IPObject.long));
   }
 
-  fetch(`https://js5.c0d3.com/location/api/ip/${thisIP}`)
+  fetch(`http://api.ipstack.com/${thisIP}?access_key=${KEY}`)
     .then((r) => r.json())
     .then((data) => {
-      let $lat = data.ll[0];
-      let $long = data.ll[1];
-      let $city = data.cityStr;
+      let $lat = data.latitude;
+      let $long = data.longitude;
+      let $city = data.city;
 
       addToDB($city, $lat, $long, thisIP);
       capturedIPs[thisIP] = {
@@ -147,17 +135,18 @@ router.route("/location/city/:cityString").get((req, res) => {
 router.route("/location/api/ip/:thisIP").get((req, res) => {
   let thisIP = req.params.thisIP;
 
-  if (capturedIPs.includes(thisIP)) {
+  if (thisIP in capturedIPs ) {
     let IPObject = capturedIPs[thisIP];
     return res.send(render(IPObject.city, IPObject.lat, IPObject.long));
   }
 
-  fetch(`https://js5.c0d3.com/location/api/ip/${thisIP}`)
+
+  fetch(`http://api.ipstack.com/${thisIP}?access_key=${KEY}`)
     .then((r) => r.json())
     .then((data) => {
-      let $lat = data.ll[0];
-      let $long = data.ll[1];
-      let $city = data.cityStr;
+      let $lat = data.latitude;
+      let $long = data.longitude;
+      let $city = data.city;
 
       addToDB($city, $lat, $long, thisIP);
       res.send(render($city, $lat, $long));
