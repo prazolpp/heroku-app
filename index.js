@@ -3,7 +3,7 @@ const app = express();
 const commands = require('./apps/commands/commands');
 const geo = require('./apps/geo/geo');
 const textExtract = require('./apps/textExtract/textExtract')
-const assets = require('./apps/assetCreation/asset')
+const assets = require('./apps/assetCreation/asset.js')
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.static('public'));

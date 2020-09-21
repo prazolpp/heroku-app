@@ -21,7 +21,16 @@
     background-color: #8f8;
   }
 </style>
-<div class="container"><h1>Drag Files Here</h1></div>
+<div class="container">
+  <h1>Drag Files Here</h1>
+  <div style="display: block">
+    <p>
+      Please drop the image(s) away from the center of the screen if possible!
+      If you drop them at the center it might display an image instead of taking
+      the images as an input.
+    </p>
+  </div>
+</div>
 <script>
   const container = document.querySelector(".container");
   const makeGreen = (e) => {
@@ -32,7 +41,7 @@
   };
   const clearScreen = (e) => {
     container.classList.remove("dropping");
-    container.innerHTML = "<h1>Drag Files Here</h1>";
+    container.innerHTML = "<h1>Drag Files Here! </h1>";
     e.preventDefault();
     return false;
   };
