@@ -20,11 +20,12 @@ const render = ($city, $lat, $long) => {
 
     <h2>API Access</h2>
     <h3>
-      <a href=""/geo/location/api/ip/206.189.152.211"">/geo/location/api/ip</a> - To retrieve your IP information
+      <a href=""/geo/location/api/ip/206.189.152.211"">Example of the location from an ip address from Singapore</a> 
     </h3>
     
     <h3>
-      <a href="/geo/location/api/ip/206.189.152.211">/geo/location/api/ip/&lt;Replace with an IP address you want to look up&gt;</a> - To retrieve information about a specific IP address
+        To retrieve location of a specific IP address, input it in the following box
+      <input type ="text" class="ip">
     </h3>
     
     <hr />
@@ -66,6 +67,15 @@ const render = ($city, $lat, $long) => {
     </script>
     
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB29pGpCzE_JGIEMLu1SGIqwoIbc0sHFHo&callback=myMap"></script>
+    <script>
+    const ip = document.querySelector(".ip")
+    ip.addEventListener('keyup', (e) => {
+        if(e.key == "Enter"){
+            console.log("okay dude");
+            window.location.href = "/geo/location/api/ip/"+ip.value 
+        }
+    })
+    </script>
     `;
 };
 
@@ -147,6 +157,9 @@ router.route("/location/api/ip/:thisIP").get((req, res) => {
       let $lat = data.latitude;
       let $long = data.longitude;
       let $city = data.city;
+      if(!$lat || !$long){
+          res.send("Not found! Please press back button to go back!")
+      }
 
       addToDB($city, $lat, $long, thisIP);
       res.send(render($city, $lat, $long));

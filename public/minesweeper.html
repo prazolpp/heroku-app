@@ -1,0 +1,217 @@
+<div class="container"></div>
+<style>
+  .box {
+    width: 80px;
+    height: 80px;
+    border: 1px solid black;
+    box-sizing: border-box;
+    display: inline-block;
+    vertical-align: top;
+    text-align: center;
+  }
+  .value {
+    display: inline-block;
+    margin-top: 50%;
+    font-size: 25px;
+  }
+  .container {
+    width: 800px;
+    background-color: lightgrey;
+  }
+  .ctrlSelected {
+    background-color: red;
+  }
+  .selected {
+    background-color: darkgrey;
+  }
+</style>
+<script>
+  const container = document.querySelector(".container");
+  let boxArr = [];
+  let bombArr = [];
+  let ctrlClick = false;
+  let selectedNum = 0;
+  window.onkeydown = (event) => {
+    if (event.ctrlKey) {
+      ctrlClick = true;
+    }
+  };
+  window.onkeyup = (event) => {
+    if (event.ctrlKey) {
+      ctrlClick = false;
+    }
+  };
+  const createBoxes = (numRows, i = 0, j = 0, arr = []) => {
+    if (i === numRows) {
+      return;
+    }
+    if (j === numRows) {
+      boxArr.push(arr);
+      return createBoxes(numRows, i + 1, 0, []);
+    }
+    arr.push(new Box(i, j));
+    return createBoxes(numRows, i, j + 1, arr);
+  };
+  const getRandomInt = (max) => {
+    return Math.floor(Math.random() * max);
+  };
+  const createBombs = (numBombs, i = 0) => {
+    if (i === numBombs) {
+      console.log(bombArr);
+      return;
+    }
+    createRandObjs();
+    return createBombs(numBombs, i + 1);
+  };
+  const createRandObjs = () => {
+    let randi = getRandomInt(10);
+    let randj = getRandomInt(10);
+    let containsBool = false;
+
+    bombArr.forEach((eachObj, i) => {
+      if (eachObj.row === randi && eachObj.col === randj) {
+        containsBool = true;
+      }
+    });
+    if (containsBool) {
+      console.log("repeated " + randi + " " + randj);
+      return createRandObjs();
+    }
+    bombArr.push({ row: randi, col: randj });
+    return;
+  };
+  const plantBombs = () => {
+    createBombs(10);
+    bombArr.forEach((location, index) => {
+      boxArr[location.row][location.col].hasBomb = true;
+      boxArr[location.row][location.col].numBombs = "B";
+    });
+    checkBombs();
+  };
+  const checkBombs = () => {
+    bombArr.forEach((location, index) => {
+      let tempRow = location.row;
+      let tempCol = location.col;
+      if (
+        tempRow > 0 &&
+        tempCol > 0 &&
+        !boxArr[tempRow - 1][tempCol - 1].hasBomb
+      ) {
+        boxArr[tempRow - 1][tempCol - 1].numBombs++;
+      }
+      if (tempRow > 0 && !boxArr[tempRow - 1][tempCol].hasBomb) {
+        boxArr[tempRow - 1][tempCol].numBombs++;
+      }
+      if (
+        tempRow > 0 &&
+        tempCol < 9 &&
+        !boxArr[tempRow - 1][tempCol + 1].hasBomb
+      ) {
+        boxArr[tempRow - 1][tempCol + 1].numBombs++;
+      }
+      if (tempCol > 0 && !boxArr[tempRow][tempCol - 1].hasBomb) {
+        boxArr[tempRow][tempCol - 1].numBombs++;
+      }
+      if (tempCol < 9 && !boxArr[tempRow][tempCol + 1].hasBomb) {
+        boxArr[tempRow][tempCol + 1].numBombs++;
+      }
+      if (
+        tempRow < 9 &&
+        tempCol > 0 &&
+        !boxArr[tempRow + 1][tempCol - 1].hasBomb
+      ) {
+        boxArr[tempRow + 1][tempCol - 1].numBombs++;
+      }
+      if (tempRow < 9 && !boxArr[tempRow + 1][tempCol].hasBomb) {
+        boxArr[tempRow + 1][tempCol].numBombs++;
+      }
+      if (
+        tempRow < 9 &&
+        tempCol < 9 &&
+        !boxArr[tempRow + 1][tempCol + 1].hasBomb
+      ) {
+        boxArr[tempRow + 1][tempCol + 1].numBombs++;
+      }
+    });
+  };
+  function Box(rowVal, colVal) {
+    const row = rowVal;
+    const col = colVal;
+    this.selected = false;
+    this.numBombs = 0;
+    this.hasBomb = false;
+    const element = document.createElement("div");
+    element.className = "box";
+    element.oncontextmenu = (e) => {
+      if (element.className.includes("selected")) return;
+      element.className += " ctrlSelected";
+      e.preventDefault();
+    };
+    element.onclick = (event) => {
+      if (this.hasBomb) {
+        if (confirm("Game Over. Play again?")) {
+          return runApp();
+        }
+      }
+      this.select();
+      if (selectedNum === 90) {
+        if (confirm("You won the game! Wanna play again?")) {
+          return runApp();
+        }
+      }
+    };
+    this.select = () => {
+      if (this.selected === true) {
+        return;
+      }
+      if (!this.hasBomb) {
+        selectedNum++;
+      }
+      element.classList.remove("ctrlSelected");
+      element.classList.add("selected");
+      element.innerHTML = `<div class="value">${
+        this.numBombs > 0 ? this.numBombs : this.hasBomb ? "B" : " "
+      }</div>`;
+      this.selected = true;
+      if (this.numBombs === 0) {
+        let tempRow = row;
+        let tempCol = col;
+        if (tempRow > 0 && tempCol > 0) {
+          boxArr[tempRow - 1][tempCol - 1].select();
+        }
+        if (tempRow > 0) {
+          boxArr[tempRow - 1][tempCol].select();
+        }
+        if (tempRow > 0 && tempCol < 9) {
+          boxArr[tempRow - 1][tempCol + 1].select();
+        }
+        if (tempCol > 0) {
+          boxArr[tempRow][tempCol - 1].select();
+        }
+        if (tempCol < 9) {
+          boxArr[tempRow][tempCol + 1].select();
+        }
+        if (tempRow < 9 && tempCol > 0) {
+          boxArr[tempRow + 1][tempCol - 1].select();
+        }
+        if (tempRow < 9) {
+          boxArr[tempRow + 1][tempCol].select();
+        }
+        if (tempRow < 9 && tempCol < 9) {
+          boxArr[tempRow + 1][tempCol + 1].select();
+        }
+      }
+    };
+    container.append(element);
+  }
+  const runApp = () => {
+    container.innerHTML = "";
+    boxArr = [];
+    bombArr = [];
+    ctrlClick = false;
+    selectedNum = 0;
+    createBoxes(10);
+    plantBombs();
+  };
+  runApp();
+</script>

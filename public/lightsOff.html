@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .box {
+        width: 50px;
+        height: 50px;
+        background-color: darkgrey;
+        border: 1px solid black;
+        margin-bottom: 4px;
+        display: inline-block;
+        box-sizing: border-box;
+        cursor: pointer;
+      }
+      .box.selected {
+        background-color: #afa;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bigBox"></div>
+    <script>
+      const bigBox = document.querySelector(".bigBox");
+      let bigArr = [];
+
+      function Box(row, col, totNum) {
+        this.row = row;
+        this.col = col;
+        this.selected = false;
+        this.element = document.createElement("div");
+        this.element.className = "box";
+        this.changeLight = () => {
+          this.element.classList.toggle("selected");
+        };
+        this.element.onclick = () => {
+          if (this.element.classList.contains("selected")) {
+            this.changeLight();
+            if (row > 0) {
+              bigArr[row - 1][col].changeLight();
+            }
+            if (col > 0) {
+              bigArr[row][col - 1].changeLight();
+            }
+            if (row < totNum - 1) {
+              bigArr[row + 1][col].changeLight();
+            }
+            if (col < totNum - 1) {
+              bigArr[row][col + 1].changeLight();
+            }
+            if (checkgameOver(totNum)) {
+              let numBox = +prompt(
+                "You won! Play again with different size? 0 to stop playing"
+              );
+              bigBox.innerHTML = "";
+              if (numBox) {
+                startGame(numBox);
+              }
+            }
+          }
+        };
+        this.checkSelected = () => {
+          if (this.element.classList.contains("selected")) {
+            return true;
+          }
+          return false;
+        };
+        bigBox.appendChild(this.element);
+      }
+      const checkgameOver = (num, i = 0, j = 0) => {
+        if (i === num) {
+          return true;
+        }
+        if (j === num) {
+          return checkgameOver(num, i + 1, 0);
+        }
+        if (bigArr[i][j].checkSelected()) {
+          return false;
+        }
+        return checkgameOver(num, i, j + 1);
+      };
+      const createBoxes = (num, i = 0, j = 0, rowArr = []) => {
+        if (i === num) {
+          const getRandomInt = (max) => {
+            return Math.floor(Math.random() * max);
+          };
+          bigArr[getRandomInt(num)][getRandomInt(num)].changeLight();
+          return;
+        }
+        if (j === num) {
+          bigArr.push(rowArr);
+          return createBoxes(num, i + 1, 0, []);
+        }
+        const newBox = new Box(i, j, num);
+        rowArr.push(newBox);
+        return createBoxes(num, i, j + 1, rowArr);
+      };
+      const startGame = (numOfBoxes) => {
+        bigArr = [];
+        bigBox.style.width = `${numOfBoxes * 50}px`;
+        createBoxes(numOfBoxes);
+      };
+      startGame(2);
+    </script>
+  </body>
+</html>

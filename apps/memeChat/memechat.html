@@ -1,0 +1,239 @@
+<div class="container"></div>
+<style>
+  .signIn {
+    margin-top: 10px;
+  }
+  .loginBox {
+    border: 2px solid beige;
+    flex-direction: column;
+    width: 300px;
+    height: 300px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .innerBox {
+    width: 80%;
+    margin: 0 auto;
+  }
+  .username,
+  .password {
+    width: 100%;
+  }
+</style>
+<script>
+  const container = document.querySelector(".container");
+  let globalUsername = "";
+  let jwtToken = localStorage.getItem("userjwt");
+  const render = () => {
+    container.innerHTML = `
+            <h1>Hello ${globalUsername}</h1>
+            <video class="userVid" width=640 height=480></video>
+            <canvas class="canvas" width=640 height=480></canvas>
+            <button class="button hidden">Take Picture</button>
+            <h3>Take Image</h3>
+            <div class="imageContainer"></div>
+            <input class="caption"/>
+            <div class="allMemes"></div>
+            <style>
+            .button.hidden {
+            display: none;
+            }
+            .submit.hidden {
+            display: none;
+            }
+            .submit.hidden {
+            display: none;
+            }
+            img{
+                border: 4px solid white;
+            }
+            </style>
+            `;
+    const videoElement = document.querySelector(".userVid");
+    const canvasElement = document.querySelector(".canvas");
+    const context = canvasElement.getContext("2d");
+    const buttonElement = document.querySelector(".button");
+    const imageContainer = document.querySelector(".imageContainer");
+    const caption = document.querySelector(".caption");
+    const allMemes = document.querySelector(".allMemes");
+    navigator.mediaDevices
+      .getUserMedia({
+        video: true,
+        audio: false,
+      })
+      .then((stream) => {
+        videoElement.srcObject = stream;
+        videoElement.play();
+        buttonElement.classList.remove("hidden");
+      });
+    buttonElement.addEventListener("click", () => {
+      context.drawImage(videoElement, 0, 0, 640, 480);
+      const pngData = canvasElement.toDataURL();
+      const base64Data = pngData.replace(/^data:image\/png;base64,/, "");
+      fetch("/chatroom/images", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          img: base64Data,
+          text: caption.value,
+        }),
+      }).then(checkMemes);
+    });
+    const checkMemes = () => {
+      fetch(`/chatroom/images`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      })
+        .then((r) => r.json())
+        .then((images) => {
+          const imagesHTML = images.reduce((acc, image) => {
+            return (
+              acc +
+              `<div class="imgObj"><img width="500" height="600" class="memeImg" src="/../images/${filename}?${Date.now()}"/></div>`
+            );
+          }, "");
+          const hiddenElement = document.createElement("div");
+          hiddenElement.innerHTML = imagesHTML;
+          hiddenElement.style.display = "none";
+          allMemes.appendChild(hiddenElement);
+          const imgElementList = hiddenElement.querySelectorAll("img");
+          let loaded = 0;
+          imgElementList.forEach((img) => {
+            img.onload = () => {
+              loaded += 1;
+              if (loaded == imgElementList.length) {
+                while (allMemes.childElementCount > 1) {
+                  allMemes.removeChild(allMemes.firstChild);
+                }
+                hiddenElement.style.display = "block";
+              }
+            };
+          });
+        });
+      setTimeout(checkMemes, 1000);
+    };
+  };
+  const setUpLogin = () => {
+    container.innerHTML = `
+            <div class = 'loginBox'>
+                <div class="innerBox">    
+                    <p>Username</p> 
+                    <input class="username" type="text" />
+                    <p>Password</p>
+                    <input class="password" type="password" />
+                    <button class = "signIn">
+                        Sign In!
+                    </button>
+                    <button class = "signUp">
+                        If you don't have an account, sign up!
+                    </button>
+                </div>
+            </div>
+        `;
+    const $signIn = document.querySelector(".signIn");
+    const $signUp = document.querySelector(".signUp");
+    const $username = document.querySelector(".username");
+    const $password = document.querySelector(".password");
+    $signUp.addEventListener("click", () => {
+      setSignUp();
+    });
+    $signIn.addEventListener("click", () => {
+      fetch("auth/api/sessions", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          username: $username.value,
+          password: btoa($password.value),
+        }),
+      })
+        .then((r) => {
+          return r.json();
+        })
+        .then((body) => {
+          if (body.jwt && body.username) {
+            globalUsername = body.username;
+            jwtToken = body.jwt;
+            localStorage.setItem("userjwt", body.jwt);
+            render();
+          }
+        });
+    });
+  };
+  const setSignUp = () => {
+    container.innerHTML = `
+            <div class = 'loginBox'>
+                <div class="innerBox">    
+                    <p>Username</p> 
+                    <input class="username" type="text" />
+                    <p>Password</p>
+                    <input class="password" type="password" />
+                    <p>Name</p> 
+                    <input class="name" type="text" />
+                    <p>Email</p> 
+                    <input class="email" type="text" />
+                    <button class = "signUp">
+                        Sign Up!
+                    </button>
+                </div>
+            </div>
+        `;
+    const $signUp = document.querySelector(".signUp");
+    const $username = document.querySelector(".username");
+    const $name = document.querySelector(".name");
+    const $email = document.querySelector(".email");
+    const $password = document.querySelector(".password");
+    $signUp.addEventListener("click", () => {
+      fetch("/auth/api/users", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          username: $username.value,
+          password: btoa($password.value),
+          name: $name.value,
+          email: $email.value,
+        }),
+      })
+        .then((r) => {
+          return r.json();
+        })
+        .then((body) => {
+          if (body.jwt && body.username) {
+            globalUsername = body.username;
+            jwtToken = body.jwt;
+            localStorage.setItem("userjwt", body.jwt);
+            render();
+          }
+        });
+    });
+  };
+  const startApp = () => {
+    fetch("/chatroom/api/session", {
+      headers: {
+        Authorization: `Bearer ${jwtToken}`,
+      },
+    })
+      .then((r) => {
+        return r.json();
+      })
+      .then((body) => {
+        if (body.username) {
+          globalUsername = body.username;
+          return render();
+        }
+        return setUpLogin();
+      });
+  };
+  startApp();
+</script>
